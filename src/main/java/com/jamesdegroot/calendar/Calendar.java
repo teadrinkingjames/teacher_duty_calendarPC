@@ -16,9 +16,37 @@ import com.jamesdegroot.GenerateDutyCalendar;
  * store the events and the teachers that are assigned to the events.   
  */ 
 public class Calendar {
+    // Calendar constants
+    private static final int DEFAULT_DAYS_IN_YEAR = 365;
+    private static final int SCHOOL_DAYS_IN_YEAR = 194;  // Mandated amount of school days
+    
+    // Date constants
+    private static final int SCHOOL_YEAR_START_YEAR = 2024;
+    private static final int SCHOOL_YEAR_START_MONTH = 9;
+    private static final int SCHOOL_YEAR_START_DAY = 3;
+    private static final int SCHOOL_YEAR_END_YEAR = 2025;
+    private static final int SCHOOL_YEAR_END_MONTH = 6;
+    private static final int SCHOOL_YEAR_END_DAY = 28;
+    
+    // ICS file parsing constants
+    private static final String EVENT_START = "BEGIN:VEVENT";
+    private static final String EVENT_END = "END:VEVENT";
+    private static final String SUMMARY_PREFIX = "SUMMARY:";
+    private static final String START_DATE_PREFIX = "DTSTART;VALUE=DATE:";
+    private static final String END_DATE_PREFIX = "DTEND;VALUE=DATE:";
+    private static final String DESCRIPTION_PREFIX = "DESCRIPTION:";
+    
+    // Date format constants
+    private static final String DATE_FORMAT_PATTERN = "yyyyMMdd";
+    private static final String DISPLAY_DATE_FORMAT = "EEEE, MMMM d, yyyy";
+    
+    // Display format constants
+    private static final String DUTY_FORMAT = "%-12s | %-25s | %-30s | %-20s\n";
+    private static final String UNASSIGNED_TEXT = "UNASSIGNED";
+    private static final String TIME_SLOT_PREFIX = "Slot ";
+    
     private List<Holiday> events;
-    private List<Day> daysOfYear = new ArrayList<>(365); // CAN CHANGE THIS TO 194 *POSSIBLY* 
-                                                                         // (MANDATED AMOUNT OF SCHOOL DAYS)
+    private List<Day> daysOfYear = new ArrayList<>(DEFAULT_DAYS_IN_YEAR);
 
    
 
@@ -41,20 +69,20 @@ public class Calendar {
             String description = "";
             
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("BEGIN:VEVENT")) {
+                if (line.startsWith(EVENT_START)) {
                     summary = null;
                     startDate = null;
                     endDate = null;
                     description = "";
-                } else if (line.startsWith("SUMMARY:")) {
-                    summary = line.substring(8);
-                } else if (line.startsWith("DTSTART;VALUE=DATE:")) {
-                    startDate = parseDate(line.substring(17));
-                } else if (line.startsWith("DTEND;VALUE=DATE:")) {
-                    endDate = parseDate(line.substring(15));
-                } else if (line.startsWith("DESCRIPTION:")) {
-                    description = line.substring(12);
-                } else if (line.startsWith("END:VEVENT") && summary != null && startDate != null && endDate != null) {
+                } else if (line.startsWith(SUMMARY_PREFIX)) {
+                    summary = line.substring(SUMMARY_PREFIX.length());
+                } else if (line.startsWith(START_DATE_PREFIX)) {
+                    startDate = parseDate(line.substring(START_DATE_PREFIX.length()));
+                } else if (line.startsWith(END_DATE_PREFIX)) {
+                    endDate = parseDate(line.substring(END_DATE_PREFIX.length()));
+                } else if (line.startsWith(DESCRIPTION_PREFIX)) {
+                    description = line.substring(DESCRIPTION_PREFIX.length());
+                } else if (line.startsWith(EVENT_END) && summary != null && startDate != null && endDate != null) {
                     currentEvent = new Holiday(summary, startDate, endDate, description);
                     events.add(currentEvent);
                 }
@@ -74,7 +102,7 @@ public class Calendar {
         dateStr = dateStr.replaceAll("[^0-9]", "");
         
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT_PATTERN);
             return LocalDate.parse(dateStr, formatter);
         } catch (Exception e) {
             System.err.println("Error parsing date: " + dateStr);
@@ -109,7 +137,6 @@ public class Calendar {
      * @param endDate the end date
      */
     public void printSchoolDays(LocalDate startDate, LocalDate endDate) {
-        String format = "%-12s | %-25s | %-30s | %-20s\n";
         System.out.println("\nDuty Schedule:");
         System.out.println("=".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
         
@@ -124,9 +151,9 @@ public class Calendar {
                 Day day = dayOpt.get();
                 if (day.isSchoolDay()) {
                     System.out.println("\n" + day.getDate().format(
-                        DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")));
+                        DateTimeFormatter.ofPattern(DISPLAY_DATE_FORMAT)));
                     System.out.println("-".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
-                    System.out.printf(format, "Time Slot", "Duty", "Location", "Teacher");
+                    System.out.printf(DUTY_FORMAT, "Time Slot", "Duty", "Location", "Teacher");
                     System.out.println("-".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
                     
                     Duty[][] duties = day.getDutySchedule();
@@ -134,11 +161,11 @@ public class Calendar {
                         for (int pos = 0; pos < duties[timeSlot].length; pos++) {
                             Duty duty = duties[timeSlot][pos];
                             if (duty != null) {
-                                System.out.printf(format,
-                                    String.format("Slot %d", timeSlot + 1),
+                                System.out.printf(DUTY_FORMAT,
+                                    String.format(TIME_SLOT_PREFIX + "%d", timeSlot + 1),
                                     duty.getName(),
                                     duty.getRoom(),
-                                    duty.getTeacher() != null ? duty.getTeacher() : "UNASSIGNED"
+                                    duty.getTeacher() != null ? duty.getTeacher() : UNASSIGNED_TEXT
                                 );
                             }
                         }
@@ -153,8 +180,8 @@ public class Calendar {
      * Initializes the days of the year for 2024
      */
     public void initializeDaysOfYear() {
-        LocalDate startDate = LocalDate.of(2024, 9, 3);
-        LocalDate endDate = LocalDate.of(2025, 6, 28);
+        LocalDate startDate = LocalDate.of(SCHOOL_YEAR_START_YEAR, SCHOOL_YEAR_START_MONTH, SCHOOL_YEAR_START_DAY);
+        LocalDate endDate = LocalDate.of(SCHOOL_YEAR_END_YEAR, SCHOOL_YEAR_END_MONTH, SCHOOL_YEAR_END_DAY);
         
         LocalDate currentDate = startDate;
         while (!currentDate.isAfter(endDate)) {
@@ -187,7 +214,7 @@ public class Calendar {
                             "",  // No description needed
                             null,
                             "Various",
-                            String.format("Time Slot %d", timeSlot + 1)
+                            String.format(TIME_SLOT_PREFIX + "%d", timeSlot + 1)
                         );
                         day.addDuty(timeSlot, position, duty);
                     }

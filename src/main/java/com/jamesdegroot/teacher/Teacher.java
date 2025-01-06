@@ -4,6 +4,52 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Teacher {
+    // Schedule constants
+    private static final int TOTAL_PERIODS = 10;
+    private static final int PERIOD_5_INDEX = 4;
+    private static final int PERIOD_10_INDEX = 9;
+    private static final int DEFAULT_TOTAL_PERIODS = 8;
+    private static final int BASE_TEACHING_PERIODS = 6;
+    
+    // Course code constants
+    private static final String COOP_CODE = "1CO";
+    private static final String GYM_CODE = "PPL";
+    private static final String CREDIT_RECOVERY_CODE = "RCR";
+    private static final String CREDIT_RECOVERY_ALT_CODE = "1RC";
+    private static final String GUIDANCE_CODE = "2GU";
+    private static final String GUIDANCE_ALT_CODE = "GLE";
+    private static final String LIBRARY_CODE = "2LI";
+    
+    // Status thresholds
+    private static final int OVER_FULL_TIME_MIN = 7;
+    private static final int FULL_TIME = 6;
+    private static final int FIVE_SIXTHS = 5;
+    private static final int FOUR_SIXTHS = 4;
+    private static final int THREE_SIXTHS = 3;
+    private static final int TWO_SIXTHS = 2;
+    private static final int ONE_SIXTH = 1;
+    
+    // Duty allocation constants
+    private static final int GUIDANCE_MAX_DUTIES = 25;
+    private static final int HEAD_MAX_DUTIES = 10;
+    private static final int FULL_TIME_MAX_DUTIES = 14;
+    private static final int FIVE_SIXTHS_MAX_DUTIES = 11;
+    private static final int FOUR_SIXTHS_MAX_DUTIES = 9;
+    private static final int THREE_SIXTHS_MAX_DUTIES = 7;
+    private static final int TWO_SIXTHS_MAX_DUTIES = 6;
+    private static final int NO_DUTIES = 0;
+    
+    // Display format constants
+    private static final String FREE_PERIOD = "FREE";
+    private static final String SPECIAL_PERIOD_FORMAT = "Period %d*";
+    private static final String NORMAL_PERIOD_FORMAT = "Period %d ";
+    private static final String PERIOD_FORMAT = "  %-10s: %s\n";
+    private static final String TEACHER_FORMAT = "Teacher: %s\n";
+    private static final String TYPE_FORMAT = "Type: %s\n";
+    private static final String STATUS_FORMAT = "Status: %s (%.2f load)\n";
+    private static final String DUTIES_FORMAT = "Duties: %d/%d\n";
+    private static final String SPECIAL_PERIODS_NOTE = "\n* Periods 5 and 10 are optional periods\n";
+    
     private String name;
     private List<String> schedule;
     private double timeAllocation; // percentage of time allocated to teaching
@@ -22,8 +68,8 @@ public class Teacher {
         this.classScheduleStatus = TeacherScheduleStatusEnum.NO_LOAD;
         this.jobType = TeacherTypeEnum.REGULAR;
         
-        // Initialize all 10 periods as empty
-        for (int i = 0; i < 10; i++) {
+        // Initialize all periods as empty
+        for (int periodIndex = 0; periodIndex < TOTAL_PERIODS; periodIndex++) {
             schedule.add("");
         }
     }
@@ -31,11 +77,11 @@ public class Teacher {
     /**
      * Adds a class period to the teacher's schedule and updates their type.
      * @param item The class/period details to add
-     * @param index The period number (0-9)
+     * @param periodIndex The period number (0-9)
      */
-    public void addScheduleItem(String item, int index) {
-        if (index >= 0 && index < 10) {
-            schedule.set(index, item);
+    public void addScheduleItem(String item, int periodIndex) {
+        if (periodIndex >= 0 && periodIndex < TOTAL_PERIODS) {
+            schedule.set(periodIndex, item);
             this.jobType = determineTeacherType(); // Update type when schedule changes
         }
     }
@@ -47,23 +93,23 @@ public class Teacher {
      */
     public void calculateTimeAllocation() {
         int filledPeriods = 0;
-        int totalPeriods = 8;  // Default to 8 periods
+        int totalPeriods = DEFAULT_TOTAL_PERIODS;
         
-        // Check if teacher has classes in columns 5 or 10 (index 4 and 9)
-        if (schedule.size() > 4 && !schedule.get(4).trim().isEmpty()) {
+        // Check if teacher has classes in periods 5 and 10
+        if (schedule.size() > PERIOD_5_INDEX && !schedule.get(PERIOD_5_INDEX).trim().isEmpty()) {
             totalPeriods++;
         }
-        if (schedule.size() > 9 && !schedule.get(9).trim().isEmpty()) {
+        if (schedule.size() > PERIOD_10_INDEX && !schedule.get(PERIOD_10_INDEX).trim().isEmpty()) {
             totalPeriods++;
         }
         
-        // Count filled periods (skipping columns 5 and 10 if empty)
-        for (int i = 0; i < schedule.size(); i++) {
-            if (i != 4 && i != 9) {  // Regular periods
-                if (!schedule.get(i).trim().isEmpty()) {
+        // Count filled periods (skipping periods 5 and 10 if empty)
+        for (int periodIndex = 0; periodIndex < schedule.size(); periodIndex++) {
+            if (periodIndex != PERIOD_5_INDEX && periodIndex != PERIOD_10_INDEX) {  // Regular periods
+                if (!schedule.get(periodIndex).trim().isEmpty()) {
                     filledPeriods++;
                 }
-            } else if (!schedule.get(i).trim().isEmpty()) {  // Extra periods (5 and 10)
+            } else if (!schedule.get(periodIndex).trim().isEmpty()) {  // Extra periods (5 and 10)
                 filledPeriods++;
             }
         }
@@ -79,156 +125,34 @@ public class Teacher {
     private void calculateScheduleStatus() {
         int filledPeriods = 0;
         // Count non-empty periods (excluding periods 5 and 10)
-        for (int i = 0; i < schedule.size(); i++) {
-            if (i != 4 && i != 9 && !schedule.get(i).trim().isEmpty()) {
+        for (int periodIndex = 0; periodIndex < schedule.size(); periodIndex++) {
+            if (periodIndex != PERIOD_5_INDEX && periodIndex != PERIOD_10_INDEX && !schedule.get(periodIndex).trim().isEmpty()) {
                 filledPeriods++;
             }
         }
         
-        // Calculate time allocation based on 6 periods
-        this.timeAllocation = (double) filledPeriods / 6.0;
+        // Calculate time allocation based on base teaching periods
+        this.timeAllocation = (double) filledPeriods / BASE_TEACHING_PERIODS;
         
         // Map exact number of periods to status
-        switch (filledPeriods) {
-            case 7:
-            case 8: 
-                classScheduleStatus = TeacherScheduleStatusEnum.OVER_FULL_TIME;  // >100%
-                break;
-            case 6: 
-                classScheduleStatus = TeacherScheduleStatusEnum.FULL_TIME;    // 100%
-                break;
-            case 5: 
-                classScheduleStatus = TeacherScheduleStatusEnum.FIVE_SIXTHS;  // 83.3%
-                break;
-            case 4: 
-                classScheduleStatus = TeacherScheduleStatusEnum.FOUR_SIXTHS;  // 66.7%
-                break;
-            case 3: 
-                classScheduleStatus = TeacherScheduleStatusEnum.THREE_SIXTHS; // 50%
-                break;
-            case 2: 
-                classScheduleStatus = TeacherScheduleStatusEnum.TWO_SIXTHS;   // 33.3%
-                break;
-            case 1: 
-                classScheduleStatus = TeacherScheduleStatusEnum.ONE_SIXTH;    // 16.7%
-                break;
-            default: 
-                classScheduleStatus = TeacherScheduleStatusEnum.NO_LOAD;     // 0%
-                break;
+        if (filledPeriods >= OVER_FULL_TIME_MIN) {
+            classScheduleStatus = TeacherScheduleStatusEnum.OVER_FULL_TIME;
+        } else if (filledPeriods == FULL_TIME) {
+            classScheduleStatus = TeacherScheduleStatusEnum.FULL_TIME;
+        } else if (filledPeriods == FIVE_SIXTHS) {
+            classScheduleStatus = TeacherScheduleStatusEnum.FIVE_SIXTHS;
+        } else if (filledPeriods == FOUR_SIXTHS) {
+            classScheduleStatus = TeacherScheduleStatusEnum.FOUR_SIXTHS;
+        } else if (filledPeriods == THREE_SIXTHS) {
+            classScheduleStatus = TeacherScheduleStatusEnum.THREE_SIXTHS;
+        } else if (filledPeriods == TWO_SIXTHS) {
+            classScheduleStatus = TeacherScheduleStatusEnum.TWO_SIXTHS;
+        } else if (filledPeriods == ONE_SIXTH) {
+            classScheduleStatus = TeacherScheduleStatusEnum.ONE_SIXTH;
+        } else {
+            classScheduleStatus = TeacherScheduleStatusEnum.NO_LOAD;
         }
     }
-    /**
-     * Calculates the teacher's job type based on their schedule.
-     * Considers periods 5 and 10 only if they contain classes.
-     * Updates both timeAllocation and status fields.
-     * 
-     * IMPORTANT CODES:
-     * 1CO = CO-OP Teacher = classes are 2 hours long
-     * PPL = Gym teacher (they are in gym during lunch)
-     * RCR = credit recovery teacher (guidance counselor)
-     * 2GU = Guidance Counselor
-     * GLE = Guidance Counselor
-     */
-    public void calculateJobType() {
-        // TODO: Implement job type calculation logic
-    }
-
-    /**
-     * Sets the teacher's job type.
-     * @param jobType The TeacherType enum value representing their job type
-     */
-    public void setJobType(TeacherTypeEnum jobType) {
-        this.jobType = jobType;
-    }
-
-    /**
-     * Gets the teacher's full name.
-     * @return The teacher's name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Gets the teacher's calculated time allocation.
-     * @return A decimal between 0 and 1 representing their teaching load
-     */
-    public double getTimeAllocation() {
-        return timeAllocation;
-    }
-
-    /**
-     * Gets the teacher's current status.
-     * @return The TeacherStatus enum value representing their time status
-     */
-    public TeacherScheduleStatusEnum getClassScheduleStatus() {
-        return classScheduleStatus;
-    }
-
-    /**
-     * Gets the number of filled teaching periods (excluding 5 and 10).
-     * @return Number of non-empty teaching periods
-     */
-    public int getFilledPeriods() {
-        int count = 0;
-        for (int i = 0; i < schedule.size(); i++) {
-            if (i != 4 && i != 9 && !schedule.get(i).trim().isEmpty()) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    /**
-     * Returns a string representation of the teacher's schedule.
-     * @return A string containing the teacher's name, status, and schedule
-     */ 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Teacher: %s\n", name));
-        sb.append(String.format("Type: %s\n", jobType.toString()));
-        sb.append(String.format("Status: %s (%.2f load)\n", 
-            classScheduleStatus.toString().replace("_", " "), 
-            timeAllocation));
-        sb.append(String.format("Duties: %d/%d\n", dutiesThisSemester, maxDutiesPerSemester));
-        sb.append("Schedule:\n");
-        
-        // Print schedule with period numbers
-        for (int i = 0; i < schedule.size(); i++) {
-            String period = schedule.get(i).trim();
-            if (period.isEmpty()) {
-                period = "FREE";
-            }
-            // Add special notation for periods 5 and 10
-            String periodLabel = (i == 4 || i == 9) ? String.format("Period %d*", i + 1) : String.format("Period %d ", i + 1);
-            sb.append(String.format("  %-10s: %s\n", periodLabel, period));
-        }
-        
-        // Add note about special periods if they exist
-        if (schedule.size() > 4) {
-            sb.append("\n* Periods 5 and 10 are optional periods\n");
-        }
-        
-        return sb.toString();
-    }
-
-    //EXAMPLE OUTPUT
-    // Teacher: John Smith
-    // Status: FULL_TIME (0.75 load)
-    // Schedule:
-    //   Period 1 : Math Grade 10
-    //   Period 2 : Math Grade 11
-    //   Period 3 : FREE
-    //   Period 4 : Math Grade 9
-    //   Period 5*: FREE
-    //   Period 6 : Math Grade 12
-    //   Period 7 : FREE
-    //   Period 8 : Math Grade 10
-    //   Period 9 : Math Grade 11
-    //   Period 10*: FREE
-
-    // * Periods 5 and 10 are optional periods
 
     /**
      * Determines the teacher type based on their course schedule.
@@ -239,10 +163,10 @@ public class Teacher {
         maxDutiesPerSemester = -1;
         
         // Count occurrences of different course types
-        int coopCount = 0;
-        int gymCount = 0;
-        int guidanceCount = 0;
-        int creditRecoveryCount = 0;
+        int coopCourseCount = 0;
+        int gymCourseCount = 0;
+        int guidanceCourseCount = 0;
+        int creditRecoveryCourseCount = 0;
         
         // Check all course codes
         for (String timeSlot : schedule) {
@@ -251,55 +175,47 @@ public class Teacher {
             }
             
             // Split multiple courses in the same time slot
-            String[] courses = timeSlot.split(",");
-            for (String course : courses) {
-                String courseCode = course.toUpperCase()
+            String[] coursesInSlot = timeSlot.split(",");
+            for (String courseEntry : coursesInSlot) {
+                String courseCode = courseEntry.toUpperCase()
                     .replaceAll("\"", "")         // Remove quotes
                     .split("[ ,-]")[0];           // Split on space, comma, or dash and take first part
                 
                 // Check for excluded course codes
-                if (courseCode.contains("PPL") || 
-                    courseCode.contains("1CO") ||
-                    courseCode.contains("1RC") ||
-                    courseCode.contains("RCR") ||
-                    courseCode.contains("2GU") ||
-                    courseCode.contains("GLE") ||
-                    courseCode.contains("2LI")) {
-                    maxDutiesPerSemester = 0;
+                if (courseCode.contains(GYM_CODE) || 
+                    courseCode.contains(COOP_CODE) ||
+                    courseCode.contains(CREDIT_RECOVERY_ALT_CODE) ||
+                    courseCode.contains(CREDIT_RECOVERY_CODE) ||
+                    courseCode.contains(GUIDANCE_CODE) ||
+                    courseCode.contains(GUIDANCE_ALT_CODE) ||
+                    courseCode.contains(LIBRARY_CODE)) {
+                    maxDutiesPerSemester = NO_DUTIES;
                 }
                 
                 // Count course types for teacher type determination
-                if (courseCode.contains("1CO")) {
-                    coopCount++;
+                if (courseCode.contains(COOP_CODE)) {
+                    coopCourseCount++;
                     return TeacherTypeEnum.COOP;
-                } else if (courseCode.contains("PPL")) {
-                    gymCount++;
+                } else if (courseCode.contains(GYM_CODE)) {
+                    gymCourseCount++;
                     return TeacherTypeEnum.GYM;
-                } else if (courseCode.contains("2GU") || courseCode.contains("GLE")) {
-                    guidanceCount++;
+                } else if (courseCode.contains(GUIDANCE_CODE) || courseCode.contains(GUIDANCE_ALT_CODE)) {
+                    guidanceCourseCount++;
                     return TeacherTypeEnum.GUIDANCE;
-                } else if (courseCode.contains("1RC") || courseCode.contains("RCR")) {
-                    creditRecoveryCount++;
+                } else if (courseCode.contains(CREDIT_RECOVERY_ALT_CODE) || courseCode.contains(CREDIT_RECOVERY_CODE)) {
+                    creditRecoveryCourseCount++;
                     return TeacherTypeEnum.CREDIT_RECOVERY;
                 }
             }
         }
         
         // Determine primary role based on most frequent course type
-        if (coopCount > 2) return TeacherTypeEnum.COOP;
-        if (gymCount > 2) return TeacherTypeEnum.GYM;
-        if (guidanceCount > 2) return TeacherTypeEnum.GUIDANCE;
-        if (creditRecoveryCount > 2) return TeacherTypeEnum.CREDIT_RECOVERY;
+        if (coopCourseCount > 2) return TeacherTypeEnum.COOP;
+        if (gymCourseCount > 2) return TeacherTypeEnum.GYM;
+        if (guidanceCourseCount > 2) return TeacherTypeEnum.GUIDANCE;
+        if (creditRecoveryCourseCount > 2) return TeacherTypeEnum.CREDIT_RECOVERY;
         
         return TeacherTypeEnum.REGULAR;
-    }
-
-    /**
-     * Gets the teacher's job type.
-     * @return The TeacherTypeEnum representing their job type
-     */
-    public TeacherTypeEnum getJobType() {
-        return jobType;
     }
 
     /**
@@ -307,26 +223,93 @@ public class Teacher {
      */
     public void calculateMaxDutiesPerSemester() {
         // Skip calculation if already set to 0 by excluded course codes
-        if (maxDutiesPerSemester == 0) {
+        if (maxDutiesPerSemester == NO_DUTIES) {
             return;
         }
         
         // Calculate based on teacher type and status
         if (jobType == TeacherTypeEnum.GUIDANCE) {
-            maxDutiesPerSemester = 25;
+            maxDutiesPerSemester = GUIDANCE_MAX_DUTIES;
         } else if (jobType == TeacherTypeEnum.HEAD) {
-            maxDutiesPerSemester = 10;
+            maxDutiesPerSemester = HEAD_MAX_DUTIES;
         } else {
             // Map duties based on schedule status
             switch (classScheduleStatus) {
-                case FULL_TIME: maxDutiesPerSemester = 14; break;
-                case FIVE_SIXTHS: maxDutiesPerSemester = 11; break;
-                case FOUR_SIXTHS: maxDutiesPerSemester = 9; break;
-                case THREE_SIXTHS: maxDutiesPerSemester = 7; break;
-                case TWO_SIXTHS: maxDutiesPerSemester = 6; break;
-                default: maxDutiesPerSemester = 0; break;
+                case FULL_TIME: maxDutiesPerSemester = FULL_TIME_MAX_DUTIES; break;
+                case FIVE_SIXTHS: maxDutiesPerSemester = FIVE_SIXTHS_MAX_DUTIES; break;
+                case FOUR_SIXTHS: maxDutiesPerSemester = FOUR_SIXTHS_MAX_DUTIES; break;
+                case THREE_SIXTHS: maxDutiesPerSemester = THREE_SIXTHS_MAX_DUTIES; break;
+                case TWO_SIXTHS: maxDutiesPerSemester = TWO_SIXTHS_MAX_DUTIES; break;
+                default: maxDutiesPerSemester = NO_DUTIES; break;
             }
         }
+    }
+
+    /**
+     * Returns a string representation of the teacher's schedule.
+     * @return A string containing the teacher's name, status, and schedule
+     */ 
+    @Override
+    public String toString() {
+        StringBuilder scheduleBuilder = new StringBuilder();
+        scheduleBuilder.append(String.format(TEACHER_FORMAT, name));
+        scheduleBuilder.append(String.format(TYPE_FORMAT, jobType.toString()));
+        scheduleBuilder.append(String.format(STATUS_FORMAT, 
+            classScheduleStatus.toString().replace("_", " "), 
+            timeAllocation));
+        scheduleBuilder.append(String.format(DUTIES_FORMAT, dutiesThisSemester, maxDutiesPerSemester));
+        scheduleBuilder.append("Schedule:\n");
+        
+        // Print schedule with period numbers
+        for (int periodIndex = 0; periodIndex < schedule.size(); periodIndex++) {
+            String periodContent = schedule.get(periodIndex).trim();
+            if (periodContent.isEmpty()) {
+                periodContent = FREE_PERIOD;
+            }
+            // Add special notation for periods 5 and 10
+            String periodLabel = (periodIndex == PERIOD_5_INDEX || periodIndex == PERIOD_10_INDEX) ? 
+                String.format(SPECIAL_PERIOD_FORMAT, periodIndex + 1) : 
+                String.format(NORMAL_PERIOD_FORMAT, periodIndex + 1);
+            scheduleBuilder.append(String.format(PERIOD_FORMAT, periodLabel, periodContent));
+        }
+        
+        // Add note about special periods if they exist
+        if (schedule.size() > PERIOD_5_INDEX) {
+            scheduleBuilder.append(SPECIAL_PERIODS_NOTE);
+        }
+        
+        return scheduleBuilder.toString();
+    }
+
+    // Getters and setters remain unchanged
+    public String getName() {
+        return name;
+    }
+
+    public double getTimeAllocation() {
+        return timeAllocation;
+    }
+
+    public TeacherScheduleStatusEnum getClassScheduleStatus() {
+        return classScheduleStatus;
+    }
+
+    public int getFilledPeriods() {
+        int filledPeriodCount = 0;
+        for (int periodIndex = 0; periodIndex < schedule.size(); periodIndex++) {
+            if (periodIndex != PERIOD_5_INDEX && periodIndex != PERIOD_10_INDEX && !schedule.get(periodIndex).trim().isEmpty()) {
+                filledPeriodCount++;
+            }
+        }
+        return filledPeriodCount;
+    }
+
+    public TeacherTypeEnum getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(TeacherTypeEnum jobType) {
+        this.jobType = jobType;
     }
 
     public int getMaxDutiesPerSemester() {

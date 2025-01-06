@@ -36,6 +36,50 @@ import java.awt.event.FocusEvent;
  * 
  */
 public class AppWindow {
+    // Window dimensions and positioning
+    private static final int WINDOW_WIDTH = 1025;
+    private static final int WINDOW_HEIGHT = 1100;
+    private static final int WINDOW_X = 100;
+    private static final int WINDOW_Y = 100;
+    
+    // UI component dimensions
+    private static final int INPUT_FIELD_COLUMNS = 40;
+    private static final int CALENDAR_FIELD_COLUMNS = 35;
+    private static final int CONSOLE_WIDTH = 800;
+    private static final int CONSOLE_HEIGHT = 600;
+    
+    // Font settings
+    private static final String DEFAULT_FONT_FAMILY = "Arial";
+    private static final String CONSOLE_FONT_FAMILY = "Monospaced";
+    private static final int DEFAULT_FONT_SIZE = 14;
+    private static final int CONSOLE_FONT_SIZE = 12;
+    
+    // UI text constants
+    private static final String WINDOW_TITLE = "Teacher Duty Scheduler";
+    private static final String TEACHER_INPUT_PLACEHOLDER = "Click Browse and enter path to teacher schedule file";
+    private static final String CALENDAR_INPUT_PLACEHOLDER = "Click Browse and enter path to calendar file";
+    private static final String CSV_FILTER_DESCRIPTION = "CSV Files (*.csv)";
+    private static final String ICS_FILTER_DESCRIPTION = "Calendar Files (*.ics)";
+    private static final String CSV_EXTENSION = "csv";
+    private static final String ICS_EXTENSION = "ics";
+    
+    // Button text
+    private static final String BROWSE_BUTTON_TEXT = "Browse";
+    private static final String HELP_BUTTON_TEXT = "Help";
+    private static final String EDIT_TEACHER_BUTTON_TEXT = "Edit Teacher";
+    private static final String EDIT_DAY_BUTTON_TEXT = "Edit Day";
+    private static final String SHOW_CONSOLE_TEXT = "Show Console";
+    private static final String HIDE_CONSOLE_TEXT = "Hide Console";
+    
+    // Layout constants
+    private static final int LAYOUT_GAP = 5;
+    private static final int BORDER_PADDING = 25;
+    private static final int TOP_PADDING = 10;
+    
+    // Panel names for CardLayout
+    private static final String CONSOLE_PANEL = "console";
+    private static final String EMPTY_PANEL = "empty";
+
     private JFrame frame;
     private JPanel mainPanel;
     private JFileChooser fileChooser;
@@ -63,53 +107,38 @@ public class AppWindow {
      */
     private void initialize() {
         frame = new JFrame();
-        frame.setTitle("Teacher Duty Scheduler");
+        frame.setTitle(WINDOW_TITLE);
         frame.setResizable(true);
         frame.setUndecorated(false);
-        frame.setBounds(100, 100, 1000, 800);
+        frame.setBounds(WINDOW_X, WINDOW_Y, WINDOW_WIDTH, WINDOW_HEIGHT);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        // Initialize file chooser with filters
         fileChooser = new JFileChooser();
-        fileChooser.setPreferredSize(new Dimension(1000, 800));
+        fileChooser.setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
         String downloadsFolderPath = System.getProperty("user.home") + File.separator + "Downloads";
         fileChooser.setCurrentDirectory(new File(downloadsFolderPath));
         
-        // Create file filters
-        FileNameExtensionFilter csvFilter = 
-            new FileNameExtensionFilter(
-                "CSV Files (*.csv)", "csv");
+        csvFilter = new FileNameExtensionFilter(CSV_FILTER_DESCRIPTION, CSV_EXTENSION);
+        icsFilter = new FileNameExtensionFilter(ICS_FILTER_DESCRIPTION, ICS_EXTENSION);
         
-        FileNameExtensionFilter icsFilter = 
-            new FileNameExtensionFilter(
-                "Calendar Files (*.ics)", "ics");
-        
-        // Store filters for later use
-        this.csvFilter = csvFilter;
-        this.icsFilter = icsFilter;
-        
-        mainPanel = new JPanel(new BorderLayout(5, 5));
+        mainPanel = new JPanel(new BorderLayout(LAYOUT_GAP, LAYOUT_GAP));
         frame.setContentPane(mainPanel);
         
-        // Create card layout panel for console
         cardPanel = new JPanel(new CardLayout());
         cardLayout = (CardLayout) cardPanel.getLayout();
         
-        // Create console panel with padding
         consoleOutput = new JTextArea();
         consoleOutput.setEditable(false);
-        consoleOutput.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        consoleOutput.setFont(new Font(CONSOLE_FONT_FAMILY, Font.PLAIN, CONSOLE_FONT_SIZE));
         JScrollPane scrollPane = new JScrollPane(consoleOutput);
         
-        // Create padded panel for console
         JPanel paddedConsolePanel = new JPanel(new BorderLayout());
         paddedConsolePanel.add(scrollPane);
-        paddedConsolePanel.setBorder(BorderFactory.createEmptyBorder(0, 25, 25, 25));
-        scrollPane.setPreferredSize(new Dimension(800, 600));
+        paddedConsolePanel.setBorder(BorderFactory.createEmptyBorder(0, BORDER_PADDING, BORDER_PADDING, BORDER_PADDING));
+        scrollPane.setPreferredSize(new Dimension(CONSOLE_WIDTH, CONSOLE_HEIGHT));
         
-        // Add console and empty panel to card layout
-        cardPanel.add(paddedConsolePanel, "console");
-        cardPanel.add(new JPanel(), "empty");
+        cardPanel.add(paddedConsolePanel, CONSOLE_PANEL);
+        cardPanel.add(new JPanel(), EMPTY_PANEL);
         
         mainPanel.add(cardPanel, BorderLayout.CENTER);
         addInputField();
@@ -136,22 +165,21 @@ public class AppWindow {
      */
     private void addInputField() {
         JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new GridLayout(3, 1, 5, 5));
+        inputPanel.setLayout(new GridLayout(3, 1, LAYOUT_GAP, LAYOUT_GAP));
         
         // First row - Teacher Schedule File
         JPanel teacherPanel = new JPanel();
-        teacherPanel.setLayout(new BorderLayout(5, 0));
-        teacherPanel.setBorder(BorderFactory.createEmptyBorder(5, 25, 5, 25));
+        teacherPanel.setLayout(new BorderLayout(LAYOUT_GAP, 0));
+        teacherPanel.setBorder(BorderFactory.createEmptyBorder(LAYOUT_GAP, BORDER_PADDING, LAYOUT_GAP, BORDER_PADDING));
         
-        String teacherBarText = "Click Browse and enter path to teacher schedule file";
-        inputField = new JTextField(40) {
+        inputField = new JTextField(INPUT_FIELD_COLUMNS) {
             @Override
             public boolean isFocusable() {
                 return false;
             }
         };
-        inputField.setText(teacherBarText);
-        inputField.setFont(new Font("Arial", Font.PLAIN, 14));
+        inputField.setText(TEACHER_INPUT_PLACEHOLDER);
+        inputField.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         inputField.setForeground(Color.BLACK);
         inputField.addMouseListener(new MouseAdapter() {
             @Override
@@ -163,21 +191,21 @@ public class AppWindow {
         
         inputField.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent evt) {
-                if (inputField.getText().equals(teacherBarText)) {
+                if (inputField.getText().equals(TEACHER_INPUT_PLACEHOLDER)) {
                     inputField.setText("");
                     inputField.setForeground(Color.BLACK);
                 }
             }
             public void focusLost(FocusEvent evt) {
                 if (inputField.getText().isEmpty()) {
-                    inputField.setText(teacherBarText);
+                    inputField.setText(TEACHER_INPUT_PLACEHOLDER);
                     inputField.setForeground(Color.GRAY);
                 }
                 inputField.setFocusable(false);
             }
         });
         
-        JButton teacherBrowseButton = new JButton("Browse");
+        JButton teacherBrowseButton = new JButton(BROWSE_BUTTON_TEXT);
         styleButton(teacherBrowseButton);
         
         teacherPanel.add(inputField, BorderLayout.CENTER);
@@ -185,18 +213,17 @@ public class AppWindow {
         
         // Second row - Calendar File
         JPanel calendarPanel = new JPanel();
-        calendarPanel.setLayout(new BorderLayout(5, 0));
-        calendarPanel.setBorder(BorderFactory.createEmptyBorder(5, 25, 5, 25));
+        calendarPanel.setLayout(new BorderLayout(LAYOUT_GAP, 0));
+        calendarPanel.setBorder(BorderFactory.createEmptyBorder(LAYOUT_GAP, BORDER_PADDING, LAYOUT_GAP, BORDER_PADDING));
         
-        String calendarBarText = "Click Browse and enter path to calendar file";
-        JTextField calendarField = new JTextField(35) {
+        JTextField calendarField = new JTextField(CALENDAR_FIELD_COLUMNS) {
             @Override
             public boolean isFocusable() {
                 return false;
             }
         };
-        calendarField.setText(calendarBarText);
-        calendarField.setFont(new Font("Arial", Font.PLAIN, 14));
+        calendarField.setText(CALENDAR_INPUT_PLACEHOLDER);
+        calendarField.setFont(new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, DEFAULT_FONT_SIZE));
         calendarField.setForeground(Color.BLACK);
         calendarField.addMouseListener(new MouseAdapter() {
             @Override
@@ -208,32 +235,32 @@ public class AppWindow {
         
         calendarField.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent evt) {
-                if (calendarField.getText().equals(calendarBarText)) {
+                if (calendarField.getText().equals(CALENDAR_INPUT_PLACEHOLDER)) {
                     calendarField.setText("");
                     calendarField.setForeground(Color.BLACK);
                 }
             }
             public void focusLost(FocusEvent evt) {
                 if (calendarField.getText().isEmpty()) {
-                    calendarField.setText(calendarBarText);
+                    calendarField.setText(CALENDAR_INPUT_PLACEHOLDER);
                     calendarField.setForeground(Color.GRAY);
                 }
                 calendarField.setFocusable(false);
             }
         });
         
-        JButton calendarBrowseButton = new JButton("Browse");
+        JButton calendarBrowseButton = new JButton(BROWSE_BUTTON_TEXT);
         styleButton(calendarBrowseButton);
         
         calendarPanel.add(calendarField, BorderLayout.CENTER);
         calendarPanel.add(calendarBrowseButton, BorderLayout.EAST);
         
         // Add toggle button panel
-        JPanel togglePanel = new JPanel(new BorderLayout(5, 0));
-        togglePanel.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 25));
+        JPanel togglePanel = new JPanel(new BorderLayout(LAYOUT_GAP, 0));
+        togglePanel.setBorder(BorderFactory.createEmptyBorder(0, BORDER_PADDING, 0, BORDER_PADDING));
         
-        JButton helpButton = new JButton("Help");
-        JButton toggleConsoleButton = new JButton("Hide Console");
+        JButton helpButton = new JButton(HELP_BUTTON_TEXT);
+        JButton toggleConsoleButton = new JButton(HIDE_CONSOLE_TEXT);
         styleButton(helpButton);
         styleButton(toggleConsoleButton);
         
@@ -242,21 +269,21 @@ public class AppWindow {
         
         // Add toggle console action
         toggleConsoleButton.addActionListener(e -> {
-            boolean isVisible = toggleConsoleButton.getText().equals("Hide Console");
-            cardLayout.show(cardPanel, isVisible ? "empty" : "console");
-            toggleConsoleButton.setText(isVisible ? "Show Console" : "Hide Console");
+            boolean isVisible = toggleConsoleButton.getText().equals(HIDE_CONSOLE_TEXT);
+            cardLayout.show(cardPanel, isVisible ? EMPTY_PANEL : CONSOLE_PANEL);
+            toggleConsoleButton.setText(isVisible ? SHOW_CONSOLE_TEXT : HIDE_CONSOLE_TEXT);
             frame.revalidate();
         });
         
         // Add buttons to toggle panel
-        JPanel leftButtonPanel = new JPanel(new BorderLayout(5, 0));
+        JPanel leftButtonPanel = new JPanel(new BorderLayout(LAYOUT_GAP, 0));
         leftButtonPanel.add(helpButton, BorderLayout.WEST);
         
-        JPanel centerButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-        JButton editTeacherButton = new JButton("Edit Teacher");
+        JPanel centerButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, LAYOUT_GAP, 0));
+        JButton editTeacherButton = new JButton(EDIT_TEACHER_BUTTON_TEXT);
         styleButton(editTeacherButton);
         editTeacherButton.addActionListener(e -> showTeacherEditor());
-        JButton editDayButton = new JButton("Edit Day");
+        JButton editDayButton = new JButton(EDIT_DAY_BUTTON_TEXT);
         styleButton(editDayButton);
         editDayButton.addActionListener(e -> showDayEditor());
         centerButtonPanel.add(editTeacherButton);
@@ -313,7 +340,7 @@ public class AppWindow {
         // Add padding around the entire input section
         JPanel paddedPanel = new JPanel(new BorderLayout());
         paddedPanel.add(inputPanel, BorderLayout.NORTH);
-        paddedPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        paddedPanel.setBorder(BorderFactory.createEmptyBorder(TOP_PADDING, 0, TOP_PADDING, 0));
         
         mainPanel.add(paddedPanel, BorderLayout.NORTH);
         

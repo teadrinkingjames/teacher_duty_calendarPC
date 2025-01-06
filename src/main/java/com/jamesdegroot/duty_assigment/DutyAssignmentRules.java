@@ -5,10 +5,10 @@ import java.time.LocalDate;
 
 public class DutyAssignmentRules {
     // Constants for duty limits
-    @SuppressWarnings("unused")
+
     private static final int MAX_DUTIES_PER_WEEK = 1;
-    @SuppressWarnings("unused")
     private static final int MAX_CONSECUTIVE_DAYS = 1;
+    
     
     /**
      * Checks if a teacher can be assigned a duty based on their schedule
