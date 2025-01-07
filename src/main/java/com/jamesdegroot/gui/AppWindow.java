@@ -70,11 +70,13 @@ public class AppWindow {
     private static final String EDIT_DAY_BUTTON_TEXT = "Edit Day";
     private static final String SHOW_CONSOLE_TEXT = "Show Console";
     private static final String HIDE_CONSOLE_TEXT = "Hide Console";
+    private static final String ASSIGN_DUTIES_TEXT = "Assign Duties";
     
     // Layout constants
     private static final int LAYOUT_GAP = 5;
     private static final int BORDER_PADDING = 25;
     private static final int TOP_PADDING = 10;
+    private static final int BOTTOM_PADDING = 10;
     
     // Panel names for CardLayout
     private static final String CONSOLE_PANEL = "console";
@@ -142,6 +144,17 @@ public class AppWindow {
         
         mainPanel.add(cardPanel, BorderLayout.CENTER);
         addInputField();
+        
+        // Add assign duties button at the bottom
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, LAYOUT_GAP, LAYOUT_GAP));
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, BOTTOM_PADDING, 0));
+        
+        JButton assignDutiesButton = new JButton(ASSIGN_DUTIES_TEXT);
+        styleButton(assignDutiesButton);
+        assignDutiesButton.addActionListener(e -> assignDuties());
+        bottomPanel.add(assignDutiesButton);
+        
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
     }
 
     /**
@@ -426,6 +439,41 @@ public class AppWindow {
         List<Day> days = appLogic.getCalendar().getDaysOfYear();
         DayEditor editor = new DayEditor(frame, days.get(0), days);
         editor.setVisible(true);
+    }
+
+    /**
+     * Handles the duty assignment process
+     */
+    private void assignDuties() {
+        if (appLogic.getTeachers() == null || appLogic.getTeachers().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, 
+                "Please load a teacher schedule file first.", 
+                "No Teachers Loaded", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        if (appLogic.getCalendar() == null || appLogic.getCalendar().getDaysOfYear().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, 
+                "Please load a calendar file first.", 
+                "No Calendar Loaded", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Show processing message
+        System.out.println("\nAssigning duties for all terms...");
+        System.out.println("=".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
+        
+        // Perform duty assignment
+        appLogic.assignDuties();
+        
+        // Show completion message
+        System.out.println("\nDuty assignment completed!");
+        System.out.println("=".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
+        
+        // Print the final schedule
+        appLogic.printSchedule();
     }
 
     private void styleButton(JButton button) {

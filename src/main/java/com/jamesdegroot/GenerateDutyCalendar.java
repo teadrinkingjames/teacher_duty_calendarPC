@@ -6,7 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jamesdegroot.calendar.Calendar;
+import com.jamesdegroot.calendar.Day;
+import com.jamesdegroot.calendar.Duty;
 import com.jamesdegroot.calendar.Holiday;
+import com.jamesdegroot.duty_assigment.DutyAssigner;
 import com.jamesdegroot.io.ReadCalendarFromDisk;
 import com.jamesdegroot.io.ReadTeachersFromDisk;
 import com.jamesdegroot.teacher.Teacher;
@@ -23,6 +26,7 @@ public class GenerateDutyCalendar {
     private List<Teacher> teachers;
     private Calendar calendar;
     private List<String> warnings = new ArrayList<>();
+    private DutyAssigner dutyAssigner;
     
     /**
      * Creates a new GenerateDutyCalendar instance.
@@ -194,5 +198,61 @@ public class GenerateDutyCalendar {
      */
     public Calendar getCalendar() {
         return calendar;
+    }
+    
+    /**
+     * Assigns duties to teachers across all terms
+     */
+    public void assignDuties() {
+        dutyAssigner = new DutyAssigner(calendar, teachers);
+        dutyAssigner.assignDuties();
+    }
+    
+    /**
+     * Prints the complete duty schedule
+     */
+    public void printSchedule() {
+        System.out.println("\nDuty Schedule:");
+        System.out.println("=".repeat(NUM_OF_SEPERATORS_CHAR));
+        
+        // Get all school days
+        LocalDate startDate = LocalDate.of(2024, 9, 3);  // September 3rd, 2024
+        LocalDate endDate = LocalDate.of(2025, 6, 28);   // June 28th, 2025
+        
+        // Print header
+        System.out.printf("%-15s | %-20s | %-30s | %-30s%n", 
+            "Day of Week", "Duty", "Day 1 Teachers", "Day 2 Teachers");
+        System.out.println("-".repeat(NUM_OF_SEPERATORS_CHAR));
+        
+        // For each day of week (Monday to Friday)
+        for (int dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
+            final int currentDayOfWeek = dayOfWeek;
+            List<Day> daysForThisWeekday = calendar.getDaysOfYear().stream()
+                .filter(day -> day.getDate().getDayOfWeek().getValue() == currentDayOfWeek)
+                .filter(Day::isSchoolDay)
+                .toList();
+            
+            if (!daysForThisWeekday.isEmpty()) {
+                Day sampleDay = daysForThisWeekday.get(0);
+                String weekdayName = sampleDay.getDate().getDayOfWeek().toString();
+                
+                // Print duties for this day
+                Duty[][] dutySchedule = sampleDay.getDutySchedule();
+                for (int timeSlot = 0; timeSlot < dutySchedule.length; timeSlot++) {
+                    for (Duty duty : dutySchedule[timeSlot]) {
+                        if (duty != null) {
+                            System.out.printf("%-15s | %-20s | %-30s | %-30s%n",
+                                weekdayName,
+                                duty.getName(),
+                                String.join(", ", duty.getDay1Teachers()),
+                                String.join(", ", duty.getDay2Teachers()));
+                        }
+                    }
+                }
+                
+                // Add separator between days
+                System.out.println("-".repeat(NUM_OF_SEPERATORS_CHAR));
+            }
+        }
     }
 }

@@ -41,7 +41,7 @@ public class Calendar {
     private static final String DISPLAY_DATE_FORMAT = "EEEE, MMMM d, yyyy";
     
     // Display format constants
-    private static final String DUTY_FORMAT = "%-12s | %-25s | %-30s | %-20s\n";
+    private static final String DUTY_FORMAT = "%-12s | %-30s | %-20s\n";
     private static final String UNASSIGNED_TEXT = "UNASSIGNED";
     private static final String TIME_SLOT_PREFIX = "Slot ";
     
@@ -153,7 +153,7 @@ public class Calendar {
                     System.out.println("\n" + day.getDate().format(
                         DateTimeFormatter.ofPattern(DISPLAY_DATE_FORMAT)));
                     System.out.println("-".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
-                    System.out.printf(DUTY_FORMAT, "Time Slot", "Duty", "Location", "Teacher");
+                    System.out.printf(DUTY_FORMAT, "Time Slot", "Duty", "Teacher");
                     System.out.println("-".repeat(GenerateDutyCalendar.NUM_OF_SEPERATORS_CHAR));
                     
                     Duty[][] duties = day.getDutySchedule();
@@ -164,7 +164,6 @@ public class Calendar {
                                 System.out.printf(DUTY_FORMAT,
                                     String.format(TIME_SLOT_PREFIX + "%d", timeSlot + 1),
                                     duty.getName(),
-                                    duty.getRoom(),
                                     duty.getTeacher() != null ? duty.getTeacher() : UNASSIGNED_TEXT
                                 );
                             }
@@ -212,9 +211,8 @@ public class Calendar {
                         Duty duty = new Duty(
                             dutyName,
                             "",  // No description needed
-                            null,
-                            "Various",
-                            String.format(TIME_SLOT_PREFIX + "%d", timeSlot + 1)
+                            "Various",  // room
+                            String.format(TIME_SLOT_PREFIX + "%d", timeSlot + 1)  // time slot
                         );
                         day.addDuty(timeSlot, position, duty);
                     }
