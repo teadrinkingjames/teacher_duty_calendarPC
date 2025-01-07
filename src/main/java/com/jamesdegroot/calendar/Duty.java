@@ -9,10 +9,22 @@ public class Duty {
 
      // Simple array of duty names - add or remove as needed
     public static final String[] DUTY_NAMES = {
-        "Morning Hall", "Morning Parking", "Morning Cafeteria",
-        "Lunch A Hall", "Lunch A Cafeteria", "Lunch A Library",
-        "Lunch B Hall", "Lunch B Cafeteria", "Lunch B Library",
-        "After School Hall", "After School Parking", "After School Bus"
+        "[per 1] Hall", 
+        
+        "[per 2] Hall", 
+
+        "[Lun A] Cafeteria", 
+        "[Lun A] Library",
+        "[Lun A] DDP Rm 209", 
+
+        "[Lun B] Cafeteria", 
+        "[Lun B] Library", 
+        
+        "[per 3] Hall", 
+        "[per 3] Library", 
+
+        "[per 4] Hall", 
+        "[per 4] Library", 
     };
 
     public Duty(String name, String description, String teacher, String room, String time) {

@@ -6,8 +6,8 @@ import java.time.LocalDate;
  * Represents a day in the calendar.
  */
 public class Day {
-    public static final int TIME_SLOTS = 12;  // Number of duty time slots (maybe 11)
-    public static final int DUTIES_PER_SLOT = 2;  // Number of duties per time slot - easily changeable
+    public static final int TIME_SLOTS = 11;  // Number of duty time slots (maybe 11)
+    public static final int DUTIES_PER_SLOT = 1;  // Number of duties per time slot - easily changeable
     
     private LocalDate date;
     private Duty[][] dutySchedule; // 2D array [timeSlot][dutyPosition]
