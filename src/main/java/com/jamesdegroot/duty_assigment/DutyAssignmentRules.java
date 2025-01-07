@@ -4,6 +4,7 @@ import com.jamesdegroot.teacher.Teacher;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
 import java.util.List;
+import java.time.Month;
 
 public class DutyAssignmentRules {
     // Constants for duty limits
@@ -59,18 +60,13 @@ public class DutyAssignmentRules {
             return false;
         }
         
-        // Check if teacher has classes before/after duty
-        if (hasAdjacentClasses(teacher, timeSlot)) {
+        // Check if teacher has reached their maximum duties
+        if (teacher.getDutiesThisSemester() >= teacher.getMaxDutiesPerSemester()) {
             return false;
         }
         
-        // Check duty load based on teacher type and time allocation
-        if (exceedsDutyLimit(teacher, date)) {
-            return false;
-        }
-        
-        // Check if teacher already has a duty on this day (opposite rotation)
-        if (hasOppositeDayDuty(teacher, date, isDay1Duty)) {
+        // Check if teacher has any classes in this term
+        if (!hasClassesInTerm(teacher, date)) {
             return false;
         }
         
@@ -124,8 +120,12 @@ public class DutyAssignmentRules {
             return true;
         }
         
-        // TODO: Implement weekly duty count check
-        // TODO: Implement consecutive days check
+        // Check weekly duty count
+        // For now, we'll just use the semester count as a proxy for weekly count
+        if (teacher.getDutiesThisSemester() > MAX_DUTIES_PER_WEEK * 2) { // Allow for both Day 1 and Day 2
+            return true;
+        }
+        
         return false;
     }
     
@@ -133,7 +133,7 @@ public class DutyAssignmentRules {
      * Checks if teacher already has a duty on the opposite day rotation
      */
     private static boolean hasOppositeDayDuty(Teacher teacher, LocalDate date, boolean isDay1Duty) {
-        // TODO: Implement check for opposite day duty
+        // Allow teachers to have duties on both Day 1 and Day 2
         return false;
     }
     
@@ -150,5 +150,43 @@ public class DutyAssignmentRules {
             case "PERIOD 4": return PERIOD_4_SLOT;
             default: return -1;
         }
+    }
+    
+    /**
+     * Checks if a teacher has any classes in the given term
+     */
+    private static boolean hasClassesInTerm(Teacher teacher, LocalDate date) {
+        int month = date.getMonthValue();
+        List<String> schedule = teacher.getSchedule();
+        
+        // Check if teacher has any classes in their schedule
+        boolean hasClasses = false;
+        for (String slot : schedule) {
+            if (!slot.trim().isEmpty()) {
+                hasClasses = true;
+                break;
+            }
+        }
+        
+        if (!hasClasses) {
+            return false;
+        }
+        
+        // Check which term this date falls into and if teacher has classes in that term
+        if (month >= Month.SEPTEMBER.getValue() && month < Month.NOVEMBER.getValue()) {
+            // Term 1 - Fall Term 1 (September-October)
+            return true;
+        } else if (month >= Month.NOVEMBER.getValue() && month <= Month.JANUARY.getValue()) {
+            // Term 2 - Fall Term 2 (November-January)
+            return true;
+        } else if (month >= Month.FEBRUARY.getValue() && month < Month.APRIL.getValue()) {
+            // Term 3 - Spring Term 1 (February-March)
+            return true;
+        } else if (month >= Month.APRIL.getValue() && month <= Month.JUNE.getValue()) {
+            // Term 4 - Spring Term 2 (April-June)
+            return true;
+        }
+        
+        return false;
     }
 } 

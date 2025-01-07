@@ -324,6 +324,10 @@ public class Teacher {
         dutiesThisSemester++;
     }
 
+    public void resetDutiesThisSemester() {
+        dutiesThisSemester = 0;
+    }
+
     public List<String> getSchedule() {
         return schedule;
     }
